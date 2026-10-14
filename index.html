@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FDF1F5">
+<title>Bình chọn – Ai rực rỡ nhất đêm nay?</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌸</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="voter">
+
+<header class="v-head">
+  <div class="brand"><img src="assets/logo.png" alt=""><span id="schoolName"></span></div>
+  <img class="butterfly" src="assets/buom.png" alt="">
+  <h1 class="script" id="title">Ai rực rỡ nhất đêm nay?</h1>
+  <p class="occasion" id="occasion"></p>
+  <p class="lede">Chạm vào ảnh người thầy cô thấy rực rỡ nhất, rồi bấm Bình chọn. Mỗi điện thoại được một phiếu.</p>
+</header>
+
+<div id="notice" class="notice">Đang kết nối…</div>
+
+<div class="search" id="searchWrap" hidden>
+  <input id="search" type="search" placeholder="Tìm theo số hoặc tên" autocomplete="off">
+</div>
+
+<main id="grid" class="grid"></main>
+
+<section id="done" class="done" hidden>
+  <img class="butterfly" src="assets/buom.png" alt="">
+  <h2 class="script">Cảm ơn thầy cô!</h2>
+  <p>Phiếu bình chọn đã được ghi nhận cho</p>
+  <div class="mini" id="doneCard"></div>
+  <p>Mời thầy cô theo dõi màn hình lớn để xem kết quả.</p>
+</section>
+
+<div id="bar" class="vote-bar" hidden>
+  <div class="vb-text">Đã chọn <strong id="pickLabel"></strong></div>
+  <button id="voteBtn" class="btn primary" type="button">Bình chọn</button>
+</div>
+
+<dialog id="confirm" class="confirm">
+  <div class="c-photo" id="cPhoto"></div>
+  <div class="c-body">
+    <h2 class="script">Gửi phiếu cho</h2>
+    <p class="c-name" id="cName"></p>
+    <p class="c-note">Mỗi điện thoại chỉ gửi được một phiếu và không đổi lại được.</p>
+    <div class="c-actions">
+      <button class="btn" id="cBack" type="button">Chọn lại</button>
+      <button class="btn primary" id="cSend" type="button">Gửi phiếu</button>
+    </div>
+  </div>
+</dialog>
+
+<script type="module">
+import {
+  daCauHinh, auth, db, SU_KIEN, signInAnonymously, onSnapshot, doc, getDoc, setDoc,
+  serverTimestamp, refCaiDat, refUngVien, trangThai, conLai, so2, dongHo, chuCai, hienLoiCauHinh
+} from "./firebase.js";
+
+const $ = (s) => document.querySelector(s);
+let candidates = [];
+let settings = null;
+let picked = null;
+let myVote = null;
+let uid = null;
+let filter = "";
+
+function photoEl(c) {
+  if (c.photo) {
+    const img = document.createElement("img");
+    img.src = c.photo; img.alt = c.name || ""; img.loading = "lazy";
+    return img;
+  }
+  const ph = document.createElement("span");
+  ph.className = "photo-ph"; ph.textContent = chuCai(c.name);
+  return ph;
+}
+const label = (c) => `Số ${so2(c.num)} – ${c.name}`;
+
+function showNotice(text, kind = "") {
+  const n = $("#notice");
+  n.hidden = !text;
+  n.className = "notice " + kind;
+  n.innerHTML = text || "";
+}
+
+function renderStatus() {
+  if (myVote) { showNotice(""); return; }
+  const st = trangThai(settings);
+  if (st === "open") {
+    const ms = conLai(settings);
+    showNotice(ms == null
+      ? "Bình chọn đang mở."
+      : `Bình chọn đang mở. Còn <span class="clock">${dongHo(ms)}</span>`, "open");
+  } else if (st === "ended") {
+    showNotice("Bình chọn đã kết thúc. Mời thầy cô theo dõi màn hình lớn.");
+  } else {
+    showNotice("Bình chọn chưa mở. Trang sẽ tự cập nhật khi Ban tổ chức bắt đầu, thầy cô xem trước các ứng viên nhé.");
+  }
+  $("#grid").classList.toggle("locked", st !== "open");
+  if (st !== "open" && picked) { picked = null; renderGrid(); }
+  renderBar();
+}
+
+function renderGrid() {
+  const grid = $("#grid");
+  grid.replaceChildren();
+  $("#searchWrap").hidden = myVote || candidates.length < 9;
+  if (myVote) return;
+  const q = filter.trim().toLowerCase();
+  const list = candidates.filter((c) =>
+    !q || so2(c.num).includes(q) || String(c.num).includes(q) || (c.name || "").toLowerCase().includes(q) || (c.unit || "").toLowerCase().includes(q));
+  if (!list.length) {
+    const e = document.createElement("p");
+    e.className = "empty";
+    e.textContent = candidates.length ? "Không tìm thấy ứng viên phù hợp." : "Danh sách ứng viên đang được cập nhật.";
+    grid.append(e);
+    return;
+  }
+  for (const c of list) {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "card"; b.dataset.id = c.id;
+    b.setAttribute("aria-pressed", String(c.id === picked));
+    b.setAttribute("aria-label", label(c));
+    const ph = document.createElement("span"); ph.className = "photo"; ph.append(photoEl(c));
+    const num = document.createElement("span"); num.className = "num"; num.textContent = so2(c.num);
+    const name = document.createElement("span"); name.className = "name"; name.textContent = c.name || "";
+    const unit = document.createElement("span"); unit.className = "unit"; unit.textContent = c.unit || "";
+    b.append(ph, num, name, unit);
+    grid.append(b);
+  }
+}
+
+function renderBar() {
+  const c = candidates.find((x) => x.id === picked);
+  const show = !myVote && c && trangThai(settings) === "open";
+  $("#bar").hidden = !show;
+  if (show) $("#pickLabel").textContent = label(c);
+}
+
+function renderDone() {
+  $("#done").hidden = !myVote;
+  if (!myVote) return;
+  const c = candidates.find((x) => x.id === myVote);
+  const box = $("#doneCard");
+  box.replaceChildren();
+  if (!c) { box.textContent = "Ứng viên đã chọn"; return; }
+  const ph = document.createElement("span"); ph.className = "photo"; ph.append(photoEl(c));
+  const t = document.createElement("div");
+  const b = document.createElement("b"); b.textContent = c.name || "";
+  const s = document.createElement("span"); s.textContent = `Số ${so2(c.num)}${c.unit ? ", " + c.unit : ""}`;
+  t.append(b, s); box.append(ph, t);
+}
+
+function renderAll() { renderGrid(); renderDone(); renderStatus(); }
+
+$("#grid").addEventListener("click", (e) => {
+  const card = e.target.closest(".card");
+  if (!card || myVote) return;
+  if (trangThai(settings) !== "open") { card.blur(); return; }
+  picked = picked === card.dataset.id ? null : card.dataset.id;
+  for (const el of document.querySelectorAll(".card")) el.setAttribute("aria-pressed", String(el.dataset.id === picked));
+  renderBar();
+});
+
+$("#search").addEventListener("input", (e) => { filter = e.target.value; renderGrid(); });
+
+$("#voteBtn").addEventListener("click", () => {
+  const c = candidates.find((x) => x.id === picked);
+  if (!c) return;
+  $("#cPhoto").replaceChildren(photoEl(c));
+  $("#cName").textContent = label(c);
+  $("#confirm").showModal();
+});
+$("#cBack").addEventListener("click", () => $("#confirm").close());
+
+$("#cSend").addEventListener("click", async () => {
+  const send = $("#cSend");
+  send.disabled = true; send.textContent = "Đang gửi…";
+  const slow = setTimeout(() => { send.textContent = "Mạng chậm, đang gửi…"; }, 6000);
+  try {
+    await setDoc(doc(db, "votes", uid), { candidateId: picked, createdAt: serverTimestamp() });
+    myVote = picked;
+    $("#confirm").close();
+    renderAll();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  } catch (err) {
+    console.error(err);
+    $("#confirm").close();
+    const again = await getDoc(doc(db, "votes", uid)).catch(() => null);
+    if (again?.exists()) { myVote = again.data().candidateId; renderAll(); }
+    else if (trangThai(settings) !== "open") showNotice("Bình chọn đã đóng nên phiếu chưa được gửi.", "error");
+    else showNotice("Chưa gửi được phiếu. Kiểm tra kết nối mạng rồi bấm Bình chọn lại.", "error");
+  } finally {
+    clearTimeout(slow);
+    send.disabled = false; send.textContent = "Gửi phiếu";
+  }
+});
+
+async function start() {
+  $("#schoolName").textContent = SU_KIEN.truong;
+  $("#title").textContent = SU_KIEN.tieuDe;
+  $("#occasion").textContent = SU_KIEN.dip;
+  if (!daCauHinh) { hienLoiCauHinh(); return; }
+  try {
+    const cred = await signInAnonymously(auth);
+    uid = cred.user.uid;
+  } catch (err) {
+    console.error(err);
+    showNotice("Không kết nối được hệ thống bình chọn. Kiểm tra mạng rồi tải lại trang.", "error");
+    return;
+  }
+  const mine = await getDoc(doc(db, "votes", uid)).catch(() => null);
+  if (mine?.exists()) myVote = mine.data().candidateId;
+
+  onSnapshot(refUngVien(), (snap) => {
+    candidates = snap.docs.map((d) => ({ id: d.id, ...d.data() })).sort((a, b) => (a.num ?? 0) - (b.num ?? 0));
+    if (picked && !candidates.some((c) => c.id === picked)) picked = null;
+    renderAll();
+  }, (err) => { console.error(err); showNotice("Không tải được danh sách ứng viên. Tải lại trang.", "error"); });
+
+  onSnapshot(refCaiDat(), (snap) => {
+    settings = snap.exists() ? snap.data() : null;
+    renderStatus();
+  });
+
+  setInterval(renderStatus, 1000);
+}
+start();
+</script>
+</body>
+</html>

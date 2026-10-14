@@ -1,0 +1,44 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ĐỔI email dưới đây thành email tài khoản quản trị đã tạo trong Firebase Authentication
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email == "btc2010@gmail.com";
+    }
+
+    function votingOpen() {
+      let s = get(/databases/$(database)/documents/settings/main).data;
+      return s.status == "open"
+        && (s.get("endsAt", null) == null || request.time < s.endsAt);
+    }
+
+    // Cài đặt (mở/khóa/công bố): ai cũng đọc, chỉ quản trị được sửa
+    match /settings/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Ứng viên: ai cũng đọc, chỉ quản trị được thêm/sửa/xóa
+    match /candidates/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Phiếu: mỗi điện thoại (mã ẩn danh) chỉ tạo đúng 1 phiếu, không sửa được,
+    // chỉ khi bình chọn đang mở và ứng viên có thật
+    match /votes/{uid} {
+      allow read: if true;
+      allow create: if request.auth != null
+        && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(["candidateId", "createdAt"])
+        && request.resource.data.candidateId is string
+        && request.resource.data.createdAt == request.time
+        && exists(/databases/$(database)/documents/candidates/$(request.resource.data.candidateId))
+        && votingOpen();
+      allow update: if false;
+      allow delete: if isAdmin();
+    }
+  }
+}

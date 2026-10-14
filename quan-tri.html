@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Quản trị bình chọn 20/10</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔑</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+  body { padding: env(safe-area-inset-top, 0px) 0 calc(3rem + env(safe-area-inset-bottom, 0px)); }
+  .wrap { max-width: 58rem; margin: 0 auto; padding: 0 1.25rem; }
+  .a-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.25rem 0 .5rem; flex-wrap: wrap; }
+  .a-head h1 { margin: 0; font-size: 2.4rem; }
+  .a-head .brand { justify-content: flex-start; }
+  .panel { background: var(--paper); border-radius: 20px; padding: 1.25rem 1.4rem 1.4rem; margin-top: 1.1rem; box-shadow: 0 12px 30px -24px rgba(74, 29, 54, .55); }
+  .panel h2 { margin: 0 0 .9rem; font-size: 1.15rem; }
+  .panel h2 .hint { font-weight: 400; color: var(--muted); font-size: .9rem; margin-left: .4rem; }
+  .row-flex { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; }
+  label.field { display: flex; flex-direction: column; gap: .3rem; font-size: .85rem; font-weight: 600; color: var(--muted); }
+  input[type=text], input[type=number], input[type=email], input[type=password], select, textarea {
+    font: inherit; font-size: 1rem; color: var(--plum); background: #fff;
+    border: 1.5px solid var(--line); border-radius: 12px; padding: .65rem .85rem; min-width: 0;
+  }
+  textarea { width: 100%; min-height: 7rem; resize: vertical; }
+  .pill { display: inline-flex; align-items: center; gap: .5rem; padding: .35rem .9rem; border-radius: 999px; font-weight: 700; background: var(--petal-2); color: var(--rose-deep); }
+  .pill.open { background: #E6F2E1; color: #2F5A25; }
+  .pill.ended { background: #F3E7EC; color: var(--plum); }
+  .pill::before { content: ""; width: .55rem; height: .55rem; border-radius: 50%; background: currentColor; }
+  .status-line { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+  .status-line .big { font-size: 1.6rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .status-line .muted { color: var(--muted); }
+  .check { display: flex; gap: .6rem; align-items: center; margin-top: 1rem; font-weight: 500; }
+  .check input { width: 1.2rem; height: 1.2rem; accent-color: var(--rose); }
+  .msg { margin: .9rem 0 0; font-weight: 500; }
+  .msg.error { color: #8C1D18; }
+  .msg.ok { color: #2F5A25; }
+
+  .links { display: grid; gap: .75rem; }
+  .link-row { display: flex; gap: .6rem; align-items: center; flex-wrap: wrap; }
+  .link-row code { flex: 1; min-width: 12rem; padding: .6rem .8rem; border-radius: 10px; background: var(--blush); font-size: .9rem; word-break: break-all; }
+  .link-row .lbl { width: 100%; font-size: .85rem; font-weight: 600; color: var(--muted); }
+
+  .cand-form { display: grid; grid-template-columns: 6rem 1fr 10rem; gap: .75rem; align-items: end; }
+  .cand-form .photo-pick { grid-column: 1 / -1; display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
+  .cand-form .preview { width: 72px; aspect-ratio: 3 / 4; border-radius: 10px; overflow: hidden; background: var(--petal-2); flex: none; }
+  .cand-form .preview img { width: 100%; height: 100%; object-fit: cover; }
+  .cand-form .actions { grid-column: 1 / -1; display: flex; gap: .75rem; flex-wrap: wrap; }
+  @media (max-width: 560px) { .cand-form { grid-template-columns: 5rem 1fr; } .cand-form .unit-f { grid-column: 1 / -1; } }
+
+  .cand-list { list-style: none; margin: 1.2rem 0 0; padding: 0; display: grid; gap: .6rem; }
+  .cand-list li { display: grid; grid-template-columns: 52px 1fr auto; gap: .9rem; align-items: center; padding: .5rem; border-radius: 14px; background: var(--blush); }
+  .cand-list .th { width: 52px; aspect-ratio: 3 / 4; border-radius: 8px; overflow: hidden; background: var(--petal-2); }
+  .cand-list .th img { width: 100%; height: 100%; object-fit: cover; }
+  .cand-list .th .photo-ph { font-size: 1.5rem; }
+  .cand-list .nm { font-weight: 600; }
+  .cand-list .nm b { color: var(--rose-deep); margin-right: .4rem; }
+  .cand-list .sub { font-size: .85rem; color: var(--muted); }
+  .cand-list .btns { display: flex; gap: .4rem; }
+  .cand-list .btns .btn { padding: .5em .9em; font-size: .9rem; }
+  .file-btn { position: relative; overflow: hidden; }
+  .file-btn input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  details summary { cursor: pointer; font-weight: 600; color: var(--rose-deep); margin-top: 1.2rem; }
+  details p { color: var(--muted); font-size: .9rem; margin: .6rem 0; }
+
+  .login { max-width: 24rem; margin: 10vh auto 0; }
+  .login form { display: grid; gap: .9rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="a-head">
+    <div>
+      <div class="brand"><img src="assets/logo.png" alt=""><span id="schoolName"></span></div>
+      <h1 class="script">Quản trị bình chọn</h1>
+    </div>
+    <button class="btn" id="logoutBtn" type="button" hidden>Đăng xuất</button>
+  </header>
+
+  <!-- Đăng nhập -->
+  <section class="panel login" id="loginPanel" hidden>
+    <h2>Đăng nhập Ban tổ chức</h2>
+    <form id="loginForm">
+      <label class="field">Email<input type="email" id="email" autocomplete="username" required></label>
+      <label class="field">Mật khẩu<input type="password" id="pass" autocomplete="current-password" required></label>
+      <button class="btn primary" type="submit">Đăng nhập</button>
+      <p class="msg error" id="loginMsg" hidden></p>
+    </form>
+  </section>
+
+  <div id="app" hidden>
+    <!-- Điều khiển -->
+    <section class="panel">
+      <h2>Điều khiển bình chọn</h2>
+      <div class="status-line">
+        <span class="pill" id="statusPill">Chưa mở</span>
+        <span class="big" id="clock"></span>
+        <span><span class="big" id="totalVotes">0</span> <span class="muted">phiếu đã gửi</span></span>
+      </div>
+      <div class="row-flex">
+        <select id="duration" aria-label="Thời gian bình chọn">
+          <option value="0">Không giới hạn thời gian</option>
+          <option value="3">3 phút</option>
+          <option value="5" selected>5 phút</option>
+          <option value="10">10 phút</option>
+          <option value="15">15 phút</option>
+        </select>
+        <button class="btn primary" id="openBtn" type="button">Mở bình chọn</button>
+        <button class="btn" id="closeBtn" type="button">Khóa bình chọn</button>
+        <button class="btn primary" id="revealBtn" type="button">Công bố kết quả</button>
+        <button class="btn" id="unrevealBtn" type="button" hidden>Tắt màn công bố</button>
+      </div>
+      <label class="check"><input type="checkbox" id="showLive" checked> Hiện bảng xếp hạng trực tiếp trên màn LED</label>
+      <p class="msg" id="ctrlMsg" hidden></p>
+    </section>
+
+    <!-- Liên kết -->
+    <section class="panel">
+      <h2>Liên kết</h2>
+      <div class="links">
+        <div class="link-row"><span class="lbl">Trang bình chọn (mã QR trên màn LED trỏ về đây)</span><code id="voteLink"></code><button class="btn" data-copy="voteLink" type="button">Sao chép</button></div>
+        <div class="link-row"><span class="lbl">Màn hình LED (mở trên máy tính nối màn hình, bấm F để toàn màn hình)</span><code id="screenLink"></code><a class="btn" id="screenOpen" target="_blank" rel="noopener">Mở</a></div>
+      </div>
+    </section>
+
+    <!-- Ứng viên -->
+    <section class="panel">
+      <h2>Ứng viên <span class="hint" id="candCount"></span></h2>
+      <form class="cand-form" id="candForm">
+        <label class="field">Số<input type="number" id="fNum" min="1" max="999" required></label>
+        <label class="field">Họ tên<input type="text" id="fName" placeholder="Cô Nguyễn Thị Lan" required></label>
+        <label class="field unit-f">Tổ / khối<input type="text" id="fUnit" placeholder="Tổ 2"></label>
+        <div class="photo-pick">
+          <div class="preview" id="fPreview"></div>
+          <span class="btn file-btn">Chụp hoặc chọn ảnh<input type="file" id="fPhoto" accept="image/*"></span>
+          <button class="btn" type="button" id="fPhotoClear" hidden>Bỏ ảnh</button>
+        </div>
+        <div class="actions">
+          <button class="btn primary" type="submit" id="fSave">Thêm ứng viên</button>
+          <button class="btn" type="button" id="fCancel" hidden>Hủy sửa</button>
+        </div>
+      </form>
+      <p class="msg" id="candMsg" hidden></p>
+
+      <details>
+        <summary>Nhập nhanh nhiều người</summary>
+        <p>Mỗi dòng một người theo dạng: số, họ tên, tổ/khối. Ảnh có thể thêm sau bằng nút Sửa.</p>
+        <textarea id="bulk" placeholder="1, Cô Nguyễn Thị Lan, Tổ 1&#10;2, Cô Trần Thu Hà, Tổ 3"></textarea>
+        <div class="row-flex" style="margin-top:.6rem"><button class="btn" id="bulkBtn" type="button">Thêm danh sách</button></div>
+      </details>
+
+      <ul class="cand-list" id="candList"></ul>
+    </section>
+
+    <!-- Chạy thử -->
+    <section class="panel">
+      <h2>Chạy thử <span class="hint">dùng trước sự kiện, sau đó xóa phiếu thử</span></h2>
+      <div class="row-flex">
+        <button class="btn danger" id="wipeBtn" type="button">Xóa toàn bộ phiếu</button>
+      </div>
+      <p class="msg" id="wipeMsg" hidden></p>
+    </section>
+  </div>
+</div>
+
+<script type="module">
+import {
+  daCauHinh, auth, db, SU_KIEN, signInWithEmailAndPassword, signOut, onAuthStateChanged,
+  doc, setDoc, addDoc, updateDoc, deleteDoc, getDocs, onSnapshot, serverTimestamp, Timestamp, writeBatch,
+  refCaiDat, refUngVien, refPhieu, trangThai, conLai, so2, dongHo, demPhieu, linkBinhChon, chuCai, hienLoiCauHinh
+} from "./firebase.js";
+
+const $ = (s) => document.querySelector(s);
+let candidates = [], settings = null, votes = [], counts = new Map();
+let editingId = null, pendingPhoto = undefined; // undefined = giữ nguyên, null = xóa ảnh, string = ảnh mới
+let unsubs = [];
+
+function say(id, text, kind = "") {
+  const m = $(id); m.hidden = !text; m.textContent = text || ""; m.className = "msg " + kind;
+}
+function errText(e) {
+  if (e?.code === "permission-denied") return "Tài khoản này chưa có quyền quản trị. Kiểm tra email quản trị trong Firestore Rules.";
+  return "Có lỗi: " + (e?.message || e);
+}
+function photoEl(c) {
+  if (c?.photo) { const i = document.createElement("img"); i.src = c.photo; i.alt = ""; return i; }
+  const p = document.createElement("span"); p.className = "photo-ph"; p.textContent = chuCai(c?.name); return p;
+}
+
+/* ---------- Đăng nhập ---------- */
+$("#loginForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  say("#loginMsg", "");
+  try { await signInWithEmailAndPassword(auth, $("#email").value.trim(), $("#pass").value); }
+  catch (err) { console.error(err); say("#loginMsg", "Email hoặc mật khẩu chưa đúng.", "error"); }
+});
+$("#logoutBtn").addEventListener("click", () => signOut(auth));
+
+/* ---------- Điều khiển ---------- */
+async function saveSettings(patch, okText) {
+  try { await setDoc(refCaiDat(), patch, { merge: true }); say("#ctrlMsg", okText || "", "ok"); }
+  catch (err) { console.error(err); say("#ctrlMsg", errText(err), "error"); }
+}
+$("#openBtn").addEventListener("click", () => {
+  if (!candidates.length) { say("#ctrlMsg", "Thêm ứng viên trước khi mở bình chọn.", "error"); return; }
+  const m = Number($("#duration").value);
+  saveSettings({
+    status: "open", revealed: false,
+    endsAt: m ? Timestamp.fromMillis(Date.now() + m * 60000) : null
+  }, m ? `Đã mở bình chọn trong ${m} phút.` : "Đã mở bình chọn.");
+});
+$("#closeBtn").addEventListener("click", () => saveSettings({ status: "ended" }, "Đã khóa bình chọn."));
+$("#revealBtn").addEventListener("click", () => {
+  if (trangThai(settings) === "open" && !confirm("Bình chọn vẫn đang mở. Khóa bình chọn và công bố luôn?")) return;
+  saveSettings({ status: "ended", revealed: true }, "Màn LED đang công bố kết quả.");
+});
+$("#unrevealBtn").addEventListener("click", () => saveSettings({ revealed: false }, "Đã tắt màn công bố."));
+$("#showLive").addEventListener("change", (e) => saveSettings({ showLive: e.target.checked }));
+
+function renderControls() {
+  const st = trangThai(settings);
+  const pill = $("#statusPill");
+  pill.className = "pill " + st;
+  pill.textContent = st === "open" ? "Đang mở" : st === "ended" ? "Đã khóa" : "Chưa mở";
+  const ms = conLai(settings);
+  $("#clock").textContent = st === "open" && ms != null ? dongHo(ms) : "";
+  $("#totalVotes").textContent = votes.length;
+  $("#openBtn").textContent = st === "closed" ? "Mở bình chọn" : "Mở lại bình chọn";
+  $("#closeBtn").disabled = st !== "open";
+  $("#revealBtn").hidden = !!settings?.revealed;
+  $("#unrevealBtn").hidden = !settings?.revealed;
+  $("#showLive").checked = settings?.showLive !== false;
+}
+
+/* ---------- Ảnh: cắt 3:4 và nén ---------- */
+function loadImage(file) {
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => { URL.revokeObjectURL(url); res(img); };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error("Không đọc được ảnh")); };
+    img.src = url;
+  });
+}
+async function shrink(file) {
+  const img = await loadImage(file);
+  const W = 450, H = 600;
+  const scale = Math.max(W / img.naturalWidth, H / img.naturalHeight);
+  const sw = W / scale, sh = H / scale;
+  const sx = (img.naturalWidth - sw) / 2;
+  const sy = Math.max(0, (img.naturalHeight - sh) * 0.2); // ưu tiên phần trên (khuôn mặt)
+  const cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+  cv.getContext("2d").drawImage(img, sx, sy, sw, sh, 0, 0, W, H);
+  return cv.toDataURL("image/jpeg", 0.78);
+}
+function showPreview(src, name) {
+  $("#fPreview").replaceChildren(photoEl({ photo: src, name }));
+  $("#fPhotoClear").hidden = !src;
+}
+$("#fPhoto").addEventListener("change", async (e) => {
+  const f = e.target.files?.[0];
+  if (!f) return;
+  try { pendingPhoto = await shrink(f); showPreview(pendingPhoto, $("#fName").value); }
+  catch (err) { say("#candMsg", "Không đọc được ảnh này, thử ảnh khác.", "error"); }
+  e.target.value = "";
+});
+$("#fPhotoClear").addEventListener("click", () => { pendingPhoto = null; showPreview(null, $("#fName").value); });
+
+/* ---------- Ứng viên ---------- */
+function resetForm() {
+  editingId = null; pendingPhoto = undefined;
+  $("#candForm").reset();
+  $("#fNum").value = (Math.max(0, ...candidates.map((c) => c.num || 0)) + 1);
+  showPreview(null, "");
+  $("#fSave").textContent = "Thêm ứng viên";
+  $("#fCancel").hidden = true;
+}
+$("#fCancel").addEventListener("click", () => { resetForm(); say("#candMsg", ""); });
+
+$("#candForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const num = Number($("#fNum").value);
+  const name = $("#fName").value.trim();
+  const unit = $("#fUnit").value.trim();
+  if (!name || !num) return;
+  if (candidates.some((c) => c.num === num && c.id !== editingId)) { say("#candMsg", `Số ${so2(num)} đã có người dùng.`, "error"); return; }
+  const data = { num, name, unit };
+  if (pendingPhoto !== undefined) data.photo = pendingPhoto || "";
+  $("#fSave").disabled = true;
+  try {
+    if (editingId) await updateDoc(doc(db, "candidates", editingId), data);
+    else await addDoc(refUngVien(), { photo: "", ...data, createdAt: serverTimestamp() });
+    say("#candMsg", editingId ? `Đã lưu số ${so2(num)}.` : `Đã thêm số ${so2(num)}.`, "ok");
+    resetForm();
+  } catch (err) { console.error(err); say("#candMsg", errText(err), "error"); }
+  finally { $("#fSave").disabled = false; }
+});
+
+function startEdit(c) {
+  editingId = c.id; pendingPhoto = undefined;
+  $("#fNum").value = c.num; $("#fName").value = c.name || ""; $("#fUnit").value = c.unit || "";
+  showPreview(c.photo || null, c.name);
+  $("#fSave").textContent = "Lưu thay đổi";
+  $("#fCancel").hidden = false;
+  $("#candForm").scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+async function removeCand(c) {
+  const n = counts.get(c.id) || 0;
+  if (!confirm(`Xóa số ${so2(c.num)} – ${c.name}?${n ? `\n${n} phiếu đã bầu cho người này sẽ không còn được tính.` : ""}`)) return;
+  try { await deleteDoc(doc(db, "candidates", c.id)); if (editingId === c.id) resetForm(); }
+  catch (err) { say("#candMsg", errText(err), "error"); }
+}
+
+function renderList() {
+  $("#candCount").textContent = candidates.length ? `${candidates.length} người` : "";
+  const ul = $("#candList");
+  ul.replaceChildren();
+  const sorted = [...candidates].sort((a, b) => (counts.get(b.id) || 0) - (counts.get(a.id) || 0) || a.num - b.num);
+  const list = trangThai(settings) === "closed" ? candidates : sorted;
+  for (const c of list) {
+    const li = document.createElement("li");
+    const th = document.createElement("div"); th.className = "th"; th.append(photoEl(c));
+    const info = document.createElement("div");
+    const nm = document.createElement("div"); nm.className = "nm";
+    const b = document.createElement("b"); b.textContent = so2(c.num);
+    nm.append(b, c.name || "");
+    const sub = document.createElement("div"); sub.className = "sub";
+    sub.textContent = `${c.unit ? c.unit + ", " : ""}${counts.get(c.id) || 0} phiếu${c.photo ? "" : ", chưa có ảnh"}`;
+    info.append(nm, sub);
+    const btns = document.createElement("div"); btns.className = "btns";
+    const ed = document.createElement("button"); ed.className = "btn"; ed.type = "button"; ed.textContent = "Sửa"; ed.onclick = () => startEdit(c);
+    const rm = document.createElement("button"); rm.className = "btn danger"; rm.type = "button"; rm.textContent = "Xóa"; rm.onclick = () => removeCand(c);
+    btns.append(ed, rm);
+    li.append(th, info, btns);
+    ul.append(li);
+  }
+}
+
+$("#bulkBtn").addEventListener("click", async () => {
+  const lines = $("#bulk").value.split("\n").map((l) => l.trim()).filter(Boolean);
+  if (!lines.length) return;
+  const used = new Set(candidates.map((c) => c.num));
+  const items = [], bad = [];
+  for (const l of lines) {
+    const [n, name, ...rest] = l.split(/[,;\t]/).map((s) => s.trim());
+    const num = Number(n);
+    if (!num || !name || used.has(num)) { bad.push(l); continue; }
+    used.add(num); items.push({ num, name, unit: rest.join(", "), photo: "" });
+  }
+  try {
+    const batch = writeBatch(db);
+    for (const it of items) batch.set(doc(refUngVien()), { ...it, createdAt: serverTimestamp() });
+    if (items.length) await batch.commit();
+    $("#bulk").value = bad.join("\n");
+    say("#candMsg", `Đã thêm ${items.length} người.${bad.length ? ` ${bad.length} dòng bị trùng số hoặc sai định dạng, còn lại trong ô nhập.` : ""}`, bad.length ? "error" : "ok");
+    resetForm();
+  } catch (err) { say("#candMsg", errText(err), "error"); }
+});
+
+/* ---------- Chạy thử ---------- */
+$("#wipeBtn").addEventListener("click", async () => {
+  if (!votes.length) { say("#wipeMsg", "Chưa có phiếu nào.", "ok"); return; }
+  if (prompt(`Xóa toàn bộ ${votes.length} phiếu? Gõ XOA để xác nhận.`) !== "XOA") return;
+  try {
+    const snap = await getDocs(refPhieu());
+    for (let i = 0; i < snap.docs.length; i += 400) {
+      const b = writeBatch(db);
+      snap.docs.slice(i, i + 400).forEach((d) => b.delete(d.ref));
+      await b.commit();
+    }
+    await setDoc(refCaiDat(), { status: "closed", revealed: false, endsAt: null }, { merge: true });
+    say("#wipeMsg", "Đã xóa toàn bộ phiếu và đưa bình chọn về trạng thái chưa mở.", "ok");
+  } catch (err) { say("#wipeMsg", errText(err), "error"); }
+});
+
+document.querySelectorAll("[data-copy]").forEach((b) => b.addEventListener("click", async () => {
+  try { await navigator.clipboard.writeText($("#" + b.dataset.copy).textContent); b.textContent = "Đã chép"; setTimeout(() => b.textContent = "Sao chép", 1500); } catch {}
+}));
+
+/* ---------- Khởi động ---------- */
+function startData() {
+  unsubs.forEach((u) => u()); unsubs = [];
+  unsubs.push(onSnapshot(refUngVien(), (s) => {
+    candidates = s.docs.map((d) => ({ id: d.id, ...d.data() })).sort((a, b) => (a.num ?? 0) - (b.num ?? 0));
+    renderList(); if (!editingId && !$("#fName").value) resetForm();
+  }));
+  unsubs.push(onSnapshot(refCaiDat(), (s) => { settings = s.exists() ? s.data() : null; renderControls(); renderList(); }));
+  unsubs.push(onSnapshot(refPhieu(), (s) => { votes = s.docs.map((d) => d.data()); counts = demPhieu(votes); renderControls(); renderList(); }));
+}
+
+function start() {
+  $("#schoolName").textContent = SU_KIEN.truong;
+  if (!daCauHinh) { hienLoiCauHinh(); return; }
+  $("#voteLink").textContent = linkBinhChon();
+  const screenUrl = new URL("man-hinh.html", location.href).href;
+  $("#screenLink").textContent = screenUrl;
+  $("#screenOpen").href = screenUrl;
+  onAuthStateChanged(auth, (user) => {
+    const ok = user && !user.isAnonymous;
+    $("#loginPanel").hidden = ok;
+    $("#app").hidden = !ok;
+    $("#logoutBtn").hidden = !ok;
+    if (ok) startData(); else { unsubs.forEach((u) => u()); unsubs = []; }
+  });
+  setInterval(renderControls, 1000);
+}
+start();
+</script>
+</body>
+</html>

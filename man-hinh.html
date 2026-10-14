@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Màn hình LED – Ai rực rỡ nhất đêm nay?</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦋</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/canvas-confetti/1.6.0/confetti.browser.min.js"></script>
+<style>
+  html { font-size: min(1.25vw, 2.2vh); }
+  html, body { height: 100%; overflow: hidden; }
+  body.screen { cursor: default; }
+  body.screen.idle { cursor: none; }
+
+  .stage {
+    height: 100%; display: grid; grid-template-rows: auto auto 1fr;
+    padding: 2rem 3rem 2.4rem; gap: .6rem; position: relative;
+  }
+  .s-head { display: flex; align-items: center; justify-content: space-between; }
+  .s-head .brand { font-size: 1.15rem; gap: .8rem; justify-content: flex-start; }
+  .s-head .brand img { width: 4.2rem; }
+  .s-head .occasion { margin: 0; font-weight: 600; font-size: 1.15rem; color: var(--rose-deep); }
+
+  .s-title { font-size: 5.2rem; margin: 0; text-align: center; white-space: nowrap; }
+  .s-butterfly {
+    display: inline-block; height: 1.25em; width: auto; vertical-align: -.3em; margin-left: .15em;
+    animation: hover 4s ease-in-out infinite; pointer-events: none;
+  }
+
+  .s-main { display: grid; grid-template-columns: 21rem 1fr; gap: 2.4rem; min-height: 0; padding-top: .8rem; }
+  .s-left { display: flex; flex-direction: column; gap: 1.4rem; min-height: 0; }
+
+  .qr-card, .locked-card {
+    background: var(--paper); border-radius: 1.6rem; padding: 1.4rem;
+    box-shadow: 0 1.4rem 3rem -2rem rgba(74, 29, 54, .55); text-align: center;
+  }
+  #qr svg { width: 100%; height: auto; display: block; }
+  .qr-cap { margin: 1rem 0 0; font-weight: 700; font-size: 1.35rem; }
+  .qr-link { margin: .2rem 0 0; color: var(--muted); font-size: .85rem; word-break: break-all; }
+  .locked-card { padding: 2.4rem 1.4rem; }
+  .locked-card .script { font-size: 3rem; display: block; }
+  .locked-card p { margin: .6rem 0 0; color: var(--muted); font-size: 1.1rem; }
+
+  .stats { display: flex; justify-content: space-around; align-items: flex-start; gap: 1rem; text-align: center; }
+  .stats > div { display: flex; flex-direction: column; }
+  .stats .clock { font-size: 3.4rem; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--rose-deep); line-height: 1; }
+  .stats .clock.warn { color: var(--rose); animation: pulse 1s ease-in-out infinite; }
+  .stats .clock-cap { color: var(--muted); font-size: 1rem; }
+  .stats .total b { font-size: 3.4rem; line-height: 1; font-weight: 800; color: var(--plum); font-variant-numeric: tabular-nums; }
+  .stats .total span { color: var(--muted); font-size: 1rem; }
+
+  .s-right { min-height: 0; display: flex; flex-direction: column; }
+
+  /* Bảng xếp hạng trực tiếp */
+  .board { flex: 1; min-height: 0; display: grid; gap: .8rem; }
+  .row {
+    display: grid; grid-template-columns: 2.4rem auto 1fr 4.5rem; align-items: center; gap: 1.1rem;
+    background: rgba(255, 255, 255, .85); border-radius: 1.2rem; padding: .45rem 1.2rem .45rem .9rem;
+    box-shadow: 0 .8rem 1.8rem -1.4rem rgba(74, 29, 54, .5); min-height: 0; max-height: 6rem;
+  }
+  .row .rank { font-weight: 800; font-size: 1.5rem; color: var(--muted); text-align: center; font-variant-numeric: tabular-nums; }
+  .row:first-child .rank { color: var(--rose); }
+  .row .thumb { height: min(4.2rem, 100%); aspect-ratio: 1; border-radius: 50%; overflow: hidden; background: var(--petal-2); }
+  .row .thumb img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+  .row .thumb .photo-ph { font-size: 2rem; }
+  .row .who { min-width: 0; }
+  .row .who .nm { font-weight: 700; font-size: 1.35rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row .who .nm small { color: var(--rose-deep); font-weight: 800; margin-right: .6rem; font-size: 1.15rem; }
+  .row .track { height: .9rem; border-radius: 999px; background: var(--petal-2); margin-top: .4rem; overflow: hidden; }
+  .row .fill { height: 100%; width: 0; border-radius: 999px; background: linear-gradient(90deg, #F08DB1, var(--rose)); transition: width .8s cubic-bezier(.2, .8, .2, 1); }
+  .row .cnt { text-align: right; font-weight: 800; font-size: 2rem; font-variant-numeric: tabular-nums; color: var(--plum); }
+  .more { text-align: center; color: var(--muted); margin: .6rem 0 0; font-size: 1rem; flex: none; }
+
+  /* Tường ảnh ứng viên */
+  .wall { flex: 1; min-height: 0; display: grid; gap: 1.1rem; }
+  .tile { position: relative; min-height: 0; background: var(--paper); border-radius: 1.2rem; padding: .5rem .5rem 0; display: flex; flex-direction: column; box-shadow: 0 .8rem 1.8rem -1.4rem rgba(74, 29, 54, .5); }
+  .tile .ph { flex: 1; min-height: 0; border-radius: .8rem; overflow: hidden; background: var(--petal-2); }
+  .tile .ph img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+  .tile .tag { display: flex; gap: .5rem; align-items: baseline; padding: .4rem .3rem .5rem; font-size: .95rem; font-weight: 600; line-height: 1.25; }
+  .tile .tag b { color: var(--rose-deep); font-weight: 800; }
+  .tile .tag span { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .wall-empty { display: grid; place-items: center; color: var(--muted); font-size: 1.4rem; text-align: center; }
+
+  /* Công bố */
+  .reveal {
+    position: fixed; inset: 0; z-index: 20; display: grid; place-items: center;
+    background:
+      radial-gradient(50% 50% at 50% 45%, #FFFFFF 0%, transparent 80%),
+      radial-gradient(70% 60% at 50% 120%, #F6BFD2 0%, transparent 70%),
+      var(--blush);
+  }
+  .countdown { font-size: 24rem; color: var(--rose); }
+  .countdown.tick { animation: tick 1s ease-out both; }
+  @keyframes tick { 0% { transform: scale(1.6); opacity: 0; } 25% { transform: scale(1); opacity: 1; } 85% { opacity: 1; } 100% { transform: scale(.85); opacity: 0; } }
+
+  .winner { position: absolute; inset: 0; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; padding: 2rem 4rem 2rem; text-align: center; }
+  .winner .w-cap { font-family: var(--script); font-size: 4rem; line-height: 1.15; color: var(--rose); margin: 0; }
+  .winner .w-row { display: flex; justify-content: center; align-items: center; gap: 3.6rem; min-height: 0; }
+  .wcard { display: flex; flex-direction: column; align-items: center; min-height: 0; height: 100%; max-height: 40rem; padding-top: 1.5rem; }
+  .wcard .frame {
+    position: relative; flex: 1 1 auto; height: auto; min-height: 0; aspect-ratio: 3 / 4; background: #fff; padding: 1rem 1rem 0;
+    border-radius: 1rem; box-shadow: 0 2.4rem 4rem -2.4rem rgba(74, 29, 54, .7);
+    transform: rotate(-2deg); animation: rise 1.1s cubic-bezier(.2, .9, .25, 1.15) both;
+  }
+  .wcard:nth-child(2n) .frame { transform: rotate(2deg); }
+  .wcard .frame .ph { width: 100%; height: calc(100% - 1rem); border-radius: .6rem; overflow: hidden; background: var(--petal-2); }
+  .wcard .frame .ph img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+  .wcard .frame .ph .photo-ph { font-size: 10rem; }
+  .wcard .frame .perch { position: absolute; width: 8rem; right: -3.6rem; top: -1.6rem; animation: hover 3.4s ease-in-out infinite; }
+  .wcard .w-name { flex: none; font-family: var(--script); color: var(--rose-deep); font-size: 4.6rem; line-height: 1.1; margin: 1rem 0 0; white-space: nowrap; animation: fadeup .8s .5s both; }
+  .wcard .w-meta { flex: none; font-size: 1.4rem; font-weight: 600; margin: .2rem 0 0; animation: fadeup .8s .7s both; }
+  .wcard .w-meta b { color: var(--rose); margin-left: 1rem; }
+  .w-row.many .wcard { max-height: 30rem; }
+  .w-row.many .w-name { font-size: 3.2rem; }
+  .runners { display: flex; justify-content: center; gap: 2.4rem; margin-top: 1.2rem; animation: fadeup .8s 1.2s both; }
+  .runner { display: flex; align-items: center; gap: .9rem; background: rgba(255, 255, 255, .9); border-radius: 999px; padding: .4rem 1.4rem .4rem .4rem; font-size: 1.15rem; }
+  .runner .thumb { width: 3.4rem; aspect-ratio: 1; border-radius: 50%; overflow: hidden; background: var(--petal-2); }
+  .runner .thumb img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+  .runner .thumb .photo-ph { font-size: 1.6rem; }
+  .runner small { display: block; color: var(--muted); font-size: .9rem; }
+  .no-votes { font-size: 2rem; color: var(--muted); }
+  @keyframes rise { from { transform: translateY(30%) scale(.8) rotate(-8deg); opacity: 0; } }
+  @keyframes fadeup { from { transform: translateY(1.5rem); opacity: 0; } }
+  @keyframes pulse { 50% { opacity: .55; } }
+
+  .fs {
+    position: fixed; right: 1.2rem; bottom: 1.2rem; z-index: 30; font-size: .9rem; padding: .6em 1.1em;
+    transition: opacity .4s ease;
+  }
+  body.idle .fs { opacity: 0; pointer-events: none; }
+</style>
+</head>
+<body class="screen">
+
+<div class="stage">
+  <header class="s-head">
+    <div class="brand"><img src="assets/logo.png" alt=""><span id="schoolName"></span></div>
+    <p class="occasion" id="occasion"></p>
+  </header>
+  <h1 class="script s-title"><span id="title">Ai rực rỡ nhất đêm nay?</span><img class="s-butterfly" src="assets/buom.png" alt=""></h1>
+
+  <main class="s-main">
+    <aside class="s-left">
+      <div class="qr-card" id="qrCard">
+        <div id="qr" aria-label="Mã QR trang bình chọn"></div>
+        <p class="qr-cap" id="qrCap">Quét mã để bình chọn</p>
+        <p class="qr-link" id="qrLink"></p>
+      </div>
+      <div class="locked-card" id="lockedCard" hidden>
+        <span class="script">Đã khóa bình chọn</span>
+        <p>Kết quả sắp được công bố</p>
+      </div>
+      <div class="stats">
+        <div id="clockWrap" hidden>
+          <div class="clock" id="clock">00:00</div>
+          <div class="clock-cap">còn lại</div>
+        </div>
+        <div class="total"><b id="total">0</b><span>phiếu đã gửi</span></div>
+      </div>
+    </aside>
+    <section class="s-right">
+      <div class="board" id="board" hidden></div>
+      <p class="more" id="more" hidden></p>
+      <div class="wall" id="wall"></div>
+    </section>
+  </main>
+</div>
+
+<div class="reveal" id="reveal" hidden>
+  <div class="countdown script" id="countdown"></div>
+  <div class="winner" id="winner" hidden></div>
+</div>
+
+<button class="btn fs" id="fsBtn" type="button">Toàn màn hình (phím F)</button>
+
+<script type="module">
+import {
+  daCauHinh, db, SU_KIEN, onSnapshot, refCaiDat, refUngVien, refPhieu,
+  trangThai, conLai, so2, dongHo, demPhieu, linkBinhChon, chuCai, hienLoiCauHinh
+} from "./firebase.js";
+
+const $ = (s) => document.querySelector(s);
+const MAX_ROWS = 6;
+let candidates = [], settings = null, votes = [], counts = new Map();
+let loaded = { c: false, s: false, v: false };
+let revealState = null; // null | "countdown" | "shown"
+let lastRevealed = null;
+const rows = new Map();
+
+function photoEl(c) {
+  if (c?.photo) { const i = document.createElement("img"); i.src = c.photo; i.alt = ""; return i; }
+  const p = document.createElement("span"); p.className = "photo-ph"; p.textContent = chuCai(c?.name); return p;
+}
+function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+
+/* ---------- QR ---------- */
+function drawQR() {
+  const url = linkBinhChon();
+  $("#qrLink").textContent = url.replace(/^https?:\/\//, "");
+  if (typeof qrcode !== "function") { $("#qr").textContent = url; return; }
+  const qr = qrcode(0, "M"); qr.addData(url); qr.make();
+  const n = qr.getModuleCount(), q = 2;
+  let d = "";
+  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (qr.isDark(r, c)) d += `M${c + q} ${r + q}h1v1h-1z`;
+  $("#qr").innerHTML = `<svg viewBox="0 0 ${n + q * 2} ${n + q * 2}" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="#fff"/><path d="${d}" fill="#4A1D36"/></svg>`;
+}
+
+/* ---------- Trạng thái chung ---------- */
+function ranked() {
+  return candidates.map((c) => ({ ...c, votes: counts.get(c.id) || 0 }))
+    .sort((a, b) => b.votes - a.votes || (a.num ?? 0) - (b.num ?? 0));
+}
+
+function renderLeft() {
+  const st = trangThai(settings);
+  $("#qrCard").hidden = st === "ended";
+  $("#lockedCard").hidden = st !== "ended";
+  $("#qrCap").textContent = st === "open" ? "Quét mã để bình chọn" : "Quét mã xem trước";
+  $(".total").hidden = st === "closed";
+  const ms = conLai(settings);
+  $("#clockWrap").hidden = !(st === "open" && ms != null);
+  if (ms != null) {
+    $("#clock").textContent = dongHo(ms);
+    $("#clock").classList.toggle("warn", ms <= 30000);
+  }
+  $("#total").textContent = votes.length;
+}
+
+function renderRight() {
+  const st = trangThai(settings);
+  const live = st !== "closed" && settings?.showLive !== false && candidates.length > 0;
+  $("#board").hidden = !live;
+  if (!live) $("#more").hidden = true;
+  $("#wall").hidden = live;
+  live ? renderBoard() : renderWall();
+}
+
+function renderWall() {
+  const wall = $("#wall");
+  wall.replaceChildren();
+  if (!candidates.length) {
+    wall.style.gridTemplateColumns = "1fr"; wall.style.gridTemplateRows = "1fr";
+    wall.append(el("div", "wall-empty", "Danh sách ứng viên sẽ xuất hiện ở đây"));
+    return;
+  }
+  const n = candidates.length;
+  const box = wall.getBoundingClientRect();
+  // Chọn số cột để ảnh (tỉ lệ 3:4) to nhất có thể trong khung
+  let best = 1, bestH = 0;
+  for (let cols = 1; cols <= n; cols++) {
+    const r = Math.ceil(n / cols);
+    const w = box.width / cols, h = box.height / r;
+    const size = Math.min(w * 4 / 3 + 40, h);
+    if (size > bestH) { bestH = size; best = cols; }
+  }
+  wall.style.gridTemplateColumns = `repeat(${best}, minmax(0, 1fr))`;
+  wall.style.gridTemplateRows = `repeat(${Math.ceil(n / best)}, minmax(0, 1fr))`;
+  for (const c of candidates) {
+    const t = el("div", "tile");
+    const ph = el("div", "ph"); ph.append(photoEl(c));
+    const tag = el("div", "tag"); tag.append(el("b", "", so2(c.num)), el("span", "", c.name || ""));
+    t.append(ph, tag); wall.append(t);
+  }
+}
+
+function renderBoard() {
+  const board = $("#board");
+  const list = ranked();
+  const top = list.slice(0, MAX_ROWS);
+  const max = Math.max(1, ...list.map((c) => c.votes));
+  const before = new Map();
+  for (const [id, r] of rows) before.set(id, r.getBoundingClientRect().top);
+
+  const keep = new Set(top.map((c) => c.id));
+  for (const [id, r] of rows) if (!keep.has(id)) { r.remove(); rows.delete(id); }
+
+  let rank = 0, prev = null;
+  top.forEach((c, i) => {
+    if (c.votes !== prev) { rank = i + 1; prev = c.votes; }
+    let r = rows.get(c.id);
+    if (!r) {
+      r = el("div", "row");
+      r.innerHTML = `<div class="rank"></div><div class="thumb"></div><div class="who"><div class="nm"><small></small><span></span></div><div class="track"><div class="fill"></div></div></div><div class="cnt"></div>`;
+      rows.set(c.id, r);
+    }
+    r.querySelector(".rank").textContent = c.votes ? rank : "–";
+    const th = r.querySelector(".thumb"); th.replaceChildren(photoEl(c));
+    r.querySelector(".nm small").textContent = so2(c.num);
+    r.querySelector(".nm span").textContent = c.name || "";
+    r.querySelector(".cnt").textContent = c.votes;
+    board.append(r);
+    requestAnimationFrame(() => { r.querySelector(".fill").style.width = `${(c.votes / max) * 100}%`; });
+  });
+
+  board.style.gridTemplateRows = `repeat(${Math.max(1, top.length)}, minmax(0, 1fr))`;
+  board.style.alignContent = top.length < 4 ? "start" : "stretch";
+  const more = $("#more");
+  more.hidden = list.length <= MAX_ROWS;
+  more.textContent = `và ${list.length - MAX_ROWS} ứng viên khác`;
+
+  // Hiệu ứng đổi chỗ mượt (FLIP)
+  for (const [id, r] of rows) {
+    const old = before.get(id);
+    if (old == null) continue;
+    const dy = old - r.getBoundingClientRect().top;
+    if (!dy) continue;
+    r.animate([{ transform: `translateY(${dy}px)` }, { transform: "translateY(0)" }], { duration: 600, easing: "cubic-bezier(.2,.8,.2,1)" });
+  }
+}
+
+/* ---------- Công bố ---------- */
+function burst() {
+  if (typeof confetti !== "function" || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const colors = ["#DB3F7A", "#F08DB1", "#F8D3DF", "#FFFFFF", "#E8B04B"];
+  const end = Date.now() + 2600;
+  (function frame() {
+    confetti({ particleCount: 6, angle: 60, spread: 70, origin: { x: 0, y: .75 }, colors, scalar: 1.2 });
+    confetti({ particleCount: 6, angle: 120, spread: 70, origin: { x: 1, y: .75 }, colors, scalar: 1.2 });
+    if (Date.now() < end) requestAnimationFrame(frame);
+  })();
+  setTimeout(() => confetti({ particleCount: 160, spread: 120, startVelocity: 45, origin: { y: .45 }, colors, scalar: 1.3 }), 300);
+}
+
+function renderWinner() {
+  const w = $("#winner");
+  w.replaceChildren();
+  const list = ranked();
+  const topVotes = list[0]?.votes || 0;
+  w.append(el("p", "w-cap", "Người rực rỡ nhất đêm nay"));
+  const row = el("div", "w-row");
+  if (!topVotes) {
+    row.append(el("p", "no-votes", "Chưa có phiếu bình chọn nào."));
+    w.append(row, el("div"));
+    return;
+  }
+  const winners = list.filter((c) => c.votes === topVotes);
+  if (winners.length > 1) row.classList.add("many");
+  for (const c of winners) {
+    const card = el("div", "wcard");
+    const frame = el("div", "frame");
+    const ph = el("div", "ph"); ph.append(photoEl(c));
+    const perch = el("img", "perch"); perch.src = "assets/buom.png"; perch.alt = "";
+    frame.append(ph, perch);
+    const meta = el("p", "w-meta");
+    meta.append(`Số ${so2(c.num)}${c.unit ? ", " + c.unit : ""}`, el("b", "", `${c.votes} phiếu`));
+    card.append(frame, el("p", "w-name", c.name || ""), meta);
+    row.append(card);
+  }
+  const runners = el("div", "runners");
+  const rest = list.filter((c) => c.votes > 0 && c.votes < topVotes);
+  let rank = winners.length, prev = null, shown = 0;
+  for (const [i, c] of rest.entries()) {
+    if (shown >= 3) break;
+    if (c.votes !== prev) { rank = winners.length + i + 1; prev = c.votes; }
+    const r = el("div", "runner");
+    const th = el("div", "thumb"); th.append(photoEl(c));
+    const t = el("div"); t.append(el("small", "", `Xếp thứ ${rank}, ${c.votes} phiếu`), `${so2(c.num)}  ${c.name || ""}`);
+    r.append(th, t); runners.append(r); shown++;
+  }
+  w.append(row, runners);
+}
+
+async function playReveal(withCountdown) {
+  $("#reveal").hidden = false;
+  if (withCountdown && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    revealState = "countdown";
+    $("#winner").hidden = true;
+    const cd = $("#countdown"); cd.hidden = false;
+    for (const n of [3, 2, 1]) {
+      if (revealState !== "countdown") return;
+      cd.textContent = n; cd.classList.remove("tick"); void cd.offsetWidth; cd.classList.add("tick");
+      await new Promise((r) => setTimeout(r, 1000));
+    }
+    if (revealState !== "countdown") return;
+  }
+  revealState = "shown";
+  $("#countdown").hidden = true;
+  $("#winner").hidden = false;
+  renderWinner();
+  if (withCountdown) burst();
+}
+
+function hideReveal() { revealState = null; $("#reveal").hidden = true; }
+
+function sync() {
+  if (!loaded.c || !loaded.s || !loaded.v) return;
+  const revealed = !!settings?.revealed;
+  if (revealed && !revealState) playReveal(lastRevealed === false);
+  else if (!revealed && revealState) hideReveal();
+  else if (revealState === "shown") renderWinner();
+  lastRevealed = revealed;
+  renderLeft(); renderRight();
+}
+
+/* ---------- Khởi động ---------- */
+function start() {
+  $("#schoolName").textContent = SU_KIEN.truong;
+  $("#title").textContent = SU_KIEN.tieuDe;
+  $("#occasion").textContent = SU_KIEN.dip;
+  if (!daCauHinh) { hienLoiCauHinh(); return; }
+  drawQR();
+  onSnapshot(refUngVien(), (s) => {
+    candidates = s.docs.map((d) => ({ id: d.id, ...d.data() })).sort((a, b) => (a.num ?? 0) - (b.num ?? 0));
+    loaded.c = true; sync();
+  });
+  onSnapshot(refCaiDat(), (s) => { settings = s.exists() ? s.data() : null; loaded.s = true; sync(); });
+  onSnapshot(refPhieu(), (s) => {
+    votes = s.docs.map((d) => d.data());
+    counts = demPhieu(votes); loaded.v = true; sync();
+  });
+  setInterval(() => { if (loaded.s) renderLeft(); }, 500);
+  let lastSt = null;
+  setInterval(() => { const st = trangThai(settings); if (st !== lastSt) { lastSt = st; sync(); } }, 1000);
+  addEventListener("resize", () => { if (!$("#wall").hidden) renderWall(); });
+}
+
+/* Toàn màn hình + ẩn chuột khi không dùng */
+function toggleFS() { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.(); }
+$("#fsBtn").addEventListener("click", toggleFS);
+addEventListener("keydown", (e) => { if (e.key === "f" || e.key === "F") toggleFS(); });
+let idleT;
+function wake() { document.body.classList.remove("idle"); clearTimeout(idleT); idleT = setTimeout(() => document.body.classList.add("idle"), 2500); }
+addEventListener("mousemove", wake); wake();
+
+start();
+</script>
+</body>
+</html>
