@@ -7,7 +7,7 @@ import {
   getFirestore, doc, collection, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc,
   onSnapshot, serverTimestamp, Timestamp, writeBatch
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { firebaseConfig, SU_KIEN } from "./config.js";
+import { firebaseConfig, SU_KIEN, TO_KHOI } from "./config.js";
 
 export const daCauHinh = !!firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith("DAN_");
 export const app = daCauHinh ? initializeApp(firebaseConfig) : null;
@@ -15,7 +15,7 @@ export const auth = app ? getAuth(app) : null;
 export const db = app ? getFirestore(app) : null;
 
 export {
-  SU_KIEN, signInAnonymously, signInWithEmailAndPassword, signOut, onAuthStateChanged,
+  SU_KIEN, TO_KHOI, signInAnonymously, signInWithEmailAndPassword, signOut, onAuthStateChanged,
   doc, collection, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc,
   onSnapshot, serverTimestamp, Timestamp, writeBatch
 };
@@ -37,6 +37,13 @@ export function trangThai(s) {
 export function conLai(s) {
   if (!s || s.status !== "open" || !s.endsAt) return null;
   return Math.max(0, s.endsAt.toMillis() - Date.now());
+}
+
+const chuan = (s) => String(s || "").normalize("NFC").toLowerCase().replace(/\s+/g, " ").trim();
+// Trả về tên tổ/khối chuẩn trong TO_KHOI nếu khớp (không phân biệt hoa thường, khoảng trắng)
+export function khopToKhoi(text) {
+  const t = chuan(text);
+  return TO_KHOI.find((g) => chuan(g) === t) || null;
 }
 
 export const so2 = (n) => String(n ?? "").padStart(2, "0");

@@ -44,7 +44,7 @@
   .link-row code { flex: 1; min-width: 12rem; padding: .6rem .8rem; border-radius: 10px; background: var(--blush); font-size: .9rem; word-break: break-all; }
   .link-row .lbl { width: 100%; font-size: .85rem; font-weight: 600; color: var(--muted); }
 
-  .cand-form { display: grid; grid-template-columns: 6rem 1fr 10rem; gap: .75rem; align-items: end; }
+  .cand-form { display: grid; grid-template-columns: 6rem 1fr 13rem; gap: .75rem; align-items: end; }
   .cand-form .photo-pick { grid-column: 1 / -1; display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
   .cand-form .preview { width: 72px; aspect-ratio: 3 / 4; border-radius: 10px; overflow: hidden; background: var(--petal-2); flex: none; }
   .cand-form .preview img { width: 100%; height: 100%; object-fit: cover; }
@@ -132,7 +132,7 @@
       <form class="cand-form" id="candForm">
         <label class="field">Số<input type="number" id="fNum" min="1" max="999" required></label>
         <label class="field">Họ tên<input type="text" id="fName" placeholder="Cô Nguyễn Thị Lan" required></label>
-        <label class="field unit-f">Tổ / khối<input type="text" id="fUnit" placeholder="Tổ 2"></label>
+        <label class="field unit-f">Tổ / khối<select id="fUnit"><option value="">Chọn tổ/khối</option></select></label>
         <div class="photo-pick">
           <div class="preview" id="fPreview"></div>
           <span class="btn file-btn">Chụp hoặc chọn ảnh<input type="file" id="fPhoto" accept="image/*"></span>
@@ -147,8 +147,8 @@
 
       <details>
         <summary>Nhập nhanh nhiều người</summary>
-        <p>Mỗi dòng một người theo dạng: số, họ tên, tổ/khối. Ảnh có thể thêm sau bằng nút Sửa.</p>
-        <textarea id="bulk" placeholder="1, Cô Nguyễn Thị Lan, Tổ 1&#10;2, Cô Trần Thu Hà, Tổ 3"></textarea>
+        <p>Mỗi dòng một người theo dạng: số, họ tên, tổ/khối. Tên tổ/khối gõ đúng như trên các nút ở màn LED (Khối 1 … Khối 5, Tổ Tiếng Anh, Tổ Năng Khiếu, BGH-Đào Tạo, Hành Chính). Ảnh có thể thêm sau bằng nút Sửa.</p>
+        <textarea id="bulk" placeholder="1, Cô Nguyễn Thị Lan, Khối 1&#10;2, Cô Trần Thu Hà, Tổ Tiếng Anh"></textarea>
         <div class="row-flex" style="margin-top:.6rem"><button class="btn" id="bulkBtn" type="button">Thêm danh sách</button></div>
       </details>
 
@@ -168,7 +168,7 @@
 
 <script type="module">
 import {
-  daCauHinh, auth, db, SU_KIEN, signInWithEmailAndPassword, signOut, onAuthStateChanged,
+  daCauHinh, auth, db, SU_KIEN, TO_KHOI, khopToKhoi, signInWithEmailAndPassword, signOut, onAuthStateChanged,
   doc, setDoc, addDoc, updateDoc, deleteDoc, getDocs, onSnapshot, serverTimestamp, Timestamp, writeBatch,
   refCaiDat, refUngVien, refPhieu, trangThai, conLai, so2, dongHo, demPhieu, linkBinhChon, chuCai, hienLoiCauHinh
 } from "./firebase.js";
@@ -299,9 +299,15 @@ $("#candForm").addEventListener("submit", async (e) => {
   finally { $("#fSave").disabled = false; }
 });
 
+function setUnit(value) {
+  const sel = $("#fUnit");
+  if (value && ![...sel.options].some((o) => o.value === value)) sel.append(new Option(value, value));
+  sel.value = value || "";
+}
+
 function startEdit(c) {
   editingId = c.id; pendingPhoto = undefined;
-  $("#fNum").value = c.num; $("#fName").value = c.name || ""; $("#fUnit").value = c.unit || "";
+  $("#fNum").value = c.num; $("#fName").value = c.name || ""; setUnit(khopToKhoi(c.unit) || c.unit || "");
   showPreview(c.photo || null, c.name);
   $("#fSave").textContent = "Lưu thay đổi";
   $("#fCancel").hidden = false;
@@ -329,7 +335,8 @@ function renderList() {
     const b = document.createElement("b"); b.textContent = so2(c.num);
     nm.append(b, c.name || "");
     const sub = document.createElement("div"); sub.className = "sub";
-    sub.textContent = `${c.unit ? c.unit + ", " : ""}${counts.get(c.id) || 0} phiếu${c.photo ? "" : ", chưa có ảnh"}`;
+    const unitOk = !c.unit || khopToKhoi(c.unit);
+    sub.textContent = `${c.unit ? c.unit + (unitOk ? "" : " (không khớp nút tổ/khối)") + ", " : "chưa chọn tổ/khối, "}${counts.get(c.id) || 0} phiếu${c.photo ? "" : ", chưa có ảnh"}`;
     info.append(nm, sub);
     const btns = document.createElement("div"); btns.className = "btns";
     const ed = document.createElement("button"); ed.className = "btn"; ed.type = "button"; ed.textContent = "Sửa"; ed.onclick = () => startEdit(c);
@@ -345,18 +352,22 @@ $("#bulkBtn").addEventListener("click", async () => {
   if (!lines.length) return;
   const used = new Set(candidates.map((c) => c.num));
   const items = [], bad = [];
+  let lech = 0;
   for (const l of lines) {
     const [n, name, ...rest] = l.split(/[,;\t]/).map((s) => s.trim());
     const num = Number(n);
     if (!num || !name || used.has(num)) { bad.push(l); continue; }
-    used.add(num); items.push({ num, name, unit: rest.join(", "), photo: "" });
+    const raw = rest.join(", ");
+    const unit = khopToKhoi(raw) || raw;
+    if (raw && !khopToKhoi(raw)) lech++;
+    used.add(num); items.push({ num, name, unit, photo: "" });
   }
   try {
     const batch = writeBatch(db);
     for (const it of items) batch.set(doc(refUngVien()), { ...it, createdAt: serverTimestamp() });
     if (items.length) await batch.commit();
     $("#bulk").value = bad.join("\n");
-    say("#candMsg", `Đã thêm ${items.length} người.${bad.length ? ` ${bad.length} dòng bị trùng số hoặc sai định dạng, còn lại trong ô nhập.` : ""}`, bad.length ? "error" : "ok");
+    say("#candMsg", `Đã thêm ${items.length} người.${bad.length ? ` ${bad.length} dòng bị trùng số hoặc sai định dạng, còn lại trong ô nhập.` : ""}${lech ? ` ${lech} người có tổ/khối không khớp danh sách, bấm Sửa để chọn lại.` : ""}`, bad.length || lech ? "error" : "ok");
     resetForm();
   } catch (err) { say("#candMsg", errText(err), "error"); }
 });
@@ -394,6 +405,7 @@ function startData() {
 
 function start() {
   $("#schoolName").textContent = SU_KIEN.truong;
+  for (const g of TO_KHOI) $("#fUnit").append(new Option(g, g));
   if (!daCauHinh) { hienLoiCauHinh(); return; }
   $("#voteLink").textContent = linkBinhChon();
   const screenUrl = new URL("man-hinh.html", location.href).href;

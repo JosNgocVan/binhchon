@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Màn hình LED – Ai rực rỡ nhất đêm nay?</title>
+<title>Màn hình LED – Aura of Glamour</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦋</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Dancing+Script:wght@700&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/canvas-confetti/1.6.0/confetti.browser.min.js"></script>
@@ -18,19 +18,41 @@
   body.screen.idle { cursor: none; }
 
   .stage {
-    height: 100%; display: grid; grid-template-rows: auto auto 1fr;
-    padding: 2rem 3rem 2.4rem; gap: .6rem; position: relative;
+    height: 100%; display: grid; grid-template-rows: auto auto auto 1fr;
+    padding: 1.6rem 3rem 2rem; gap: .7rem; position: relative;
   }
   .s-head { display: flex; align-items: center; justify-content: space-between; }
   .s-head .brand { font-size: 1.15rem; gap: .8rem; justify-content: flex-start; }
   .s-head .brand img { width: 4.2rem; }
   .s-head .occasion { margin: 0; font-weight: 600; font-size: 1.15rem; color: var(--rose-deep); }
 
-  .s-title { font-size: 5.2rem; margin: 0; text-align: center; white-space: nowrap; }
+  .s-title { margin: -.4rem 0 0; text-align: center; line-height: 1; white-space: nowrap; font-family: var(--display); }
+  .s-title .en {
+    display: block; font-weight: 700; font-size: 1.45rem; letter-spacing: .38em; color: var(--rose-deep);
+    margin-right: -.38em;
+  }
+  .s-title .vi { display: inline-block; font-weight: 800; font-size: 3.7rem; color: var(--rose); margin-top: .35rem; letter-spacing: .02em; }
   .s-butterfly {
-    display: inline-block; height: 1.25em; width: auto; vertical-align: -.3em; margin-left: .15em;
+    display: inline-block; height: 4.4rem; width: auto; vertical-align: -1rem; margin-left: .6rem;
     animation: hover 4s ease-in-out infinite; pointer-events: none;
   }
+
+  /* Nút xem theo tổ/khối */
+  .groups { display: flex; flex-wrap: wrap; justify-content: center; gap: .45rem; }
+  .gbtn {
+    appearance: none; cursor: pointer; font: inherit; font-weight: 600; font-size: .88rem; white-space: nowrap;
+    padding: .4em .85em; border-radius: 999px; border: 1.5px solid var(--line);
+    background: rgba(255, 255, 255, .8); color: var(--plum);
+    display: inline-flex; align-items: center; gap: .45em; transition: background .2s ease, color .2s ease, transform .12s ease;
+  }
+  .gbtn:hover { background: #fff; }
+  .gbtn:active { transform: scale(.96); }
+  .gbtn .n { font-size: .8em; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .gbtn[aria-pressed="true"] { background: var(--rose); border-color: var(--rose); color: #fff; }
+  .gbtn[aria-pressed="true"] .n { color: rgba(255, 255, 255, .85); }
+  .wall-head { display: flex; align-items: baseline; gap: 1rem; margin: 0 0 .9rem; flex: none; }
+  .wall-head h2 { margin: 0; font-family: var(--display); font-weight: 800; font-size: 2.2rem; color: var(--rose-deep); }
+  .wall-head span { color: var(--muted); font-size: 1.1rem; font-weight: 500; }
 
   .s-main { display: grid; grid-template-columns: 21rem 1fr; gap: 2.4rem; min-height: 0; padding-top: .8rem; }
   .s-left { display: flex; flex-direction: column; gap: 1.4rem; min-height: 0; }
@@ -77,7 +99,7 @@
   .more { text-align: center; color: var(--muted); margin: .6rem 0 0; font-size: 1rem; flex: none; }
 
   /* Tường ảnh ứng viên */
-  .wall { flex: 1; min-height: 0; display: grid; gap: 1.1rem; }
+  .wall { flex: 1; min-height: 0; display: grid; gap: 1.1rem; width: 100%; margin: 0 auto; }
   .tile { position: relative; min-height: 0; background: var(--paper); border-radius: 1.2rem; padding: .5rem .5rem 0; display: flex; flex-direction: column; box-shadow: 0 .8rem 1.8rem -1.4rem rgba(74, 29, 54, .5); }
   .tile .ph { flex: 1; min-height: 0; border-radius: .8rem; overflow: hidden; background: var(--petal-2); }
   .tile .ph img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
@@ -98,25 +120,42 @@
   .countdown.tick { animation: tick 1s ease-out both; }
   @keyframes tick { 0% { transform: scale(1.6); opacity: 0; } 25% { transform: scale(1); opacity: 1; } 85% { opacity: 1; } 100% { transform: scale(.85); opacity: 0; } }
 
-  .winner { position: absolute; inset: 0; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; padding: 2rem 4rem 2rem; text-align: center; }
-  .winner .w-cap { font-family: var(--script); font-size: 4rem; line-height: 1.15; color: var(--rose); margin: 0; }
-  .winner .w-row { display: flex; justify-content: center; align-items: center; gap: 3.6rem; min-height: 0; }
-  .wcard { display: flex; flex-direction: column; align-items: center; min-height: 0; height: 100%; max-height: 40rem; padding-top: 1.5rem; }
-  .wcard .frame {
-    position: relative; flex: 1 1 auto; height: auto; min-height: 0; aspect-ratio: 3 / 4; background: #fff; padding: 1rem 1rem 0;
-    border-radius: 1rem; box-shadow: 0 2.4rem 4rem -2.4rem rgba(74, 29, 54, .7);
-    transform: rotate(-2deg); animation: rise 1.1s cubic-bezier(.2, .9, .25, 1.15) both;
+  .winner { position: absolute; inset: 0; display: grid; grid-template-rows: minmax(0, 1fr) auto; padding: 2.4rem 4rem 2rem; }
+  .w-stage { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 4.5rem; min-height: 0; width: 100%; max-width: 80rem; margin: 0 auto; }
+  .w-stage.many { grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr); gap: 1.4rem; text-align: center; }
+  .w-text { min-width: 0; }
+  .w-kicker { margin: 0; font-family: var(--display); font-weight: 700; font-size: 1.7rem; letter-spacing: .5em; color: var(--rose-deep); animation: fadeup .8s .4s both; }
+  .w-title { margin: .6rem 0 0; font-family: var(--display); font-weight: 800; font-size: 5.2rem; line-height: 1; color: var(--rose); animation: fadeup .8s .55s both; }
+  .w-sub { margin: .8rem 0 0; font-family: var(--display); font-weight: 700; font-size: 2.3rem; letter-spacing: .2em; color: var(--plum); animation: fadeup .8s .7s both; }
+  .w-rule { width: 7rem; height: .28rem; border-radius: 1rem; background: var(--rose); margin: 1.8rem 0 1.4rem; animation: fadeup .8s .8s both; }
+  .w-name { margin: 0; font-family: var(--script); font-size: 5.4rem; line-height: 1.1; color: var(--rose-deep); text-wrap: balance; animation: fadeup .8s .95s both; }
+  .w-meta { margin: .6rem 0 0; font-size: 1.45rem; font-weight: 600; animation: fadeup .8s 1.05s both; }
+  .w-meta b { color: var(--rose); margin-left: 1rem; }
+  .w-stage.many .w-title { font-size: 4rem; }
+  .w-stage.many .w-sub { font-size: 1.8rem; }
+  .w-stage.many .w-rule { margin: 1rem auto 0; }
+  .w-hearts { display: flex; justify-content: center; gap: 3.5rem; min-height: 0; height: 100%; }
+  .w-one { display: flex; flex-direction: column; align-items: center; min-height: 0; height: 100%; max-width: 30rem; }
+  .w-one .w-name { font-size: 3.2rem; text-align: center; margin-top: .8rem; flex: none; }
+  .w-one .w-meta { flex: none; }
+
+  /* Khung trái tim */
+  .heart-wrap {
+    position: relative; height: min(34rem, calc(100vh - 13rem)); aspect-ratio: 1 / .92;
+    filter: drop-shadow(0 1.6rem 2.2rem rgba(168, 36, 90, .38));
+    animation: rise 1.1s cubic-bezier(.2, .9, .25, 1.15) both;
   }
-  .wcard:nth-child(2n) .frame { transform: rotate(2deg); }
-  .wcard .frame .ph { width: 100%; height: calc(100% - 1rem); border-radius: .6rem; overflow: hidden; background: var(--petal-2); }
-  .wcard .frame .ph img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
-  .wcard .frame .ph .photo-ph { font-size: 10rem; }
-  .wcard .frame .perch { position: absolute; width: 8rem; right: -3.6rem; top: -1.6rem; animation: hover 3.4s ease-in-out infinite; }
-  .wcard .w-name { flex: none; font-family: var(--script); color: var(--rose-deep); font-size: 4.6rem; line-height: 1.1; margin: 1rem 0 0; white-space: nowrap; animation: fadeup .8s .5s both; }
-  .wcard .w-meta { flex: none; font-size: 1.4rem; font-weight: 600; margin: .2rem 0 0; animation: fadeup .8s .7s both; }
-  .wcard .w-meta b { color: var(--rose); margin-left: 1rem; }
-  .w-row.many .wcard { max-height: 30rem; }
-  .w-row.many .w-name { font-size: 3.2rem; }
+  .w-one .heart-wrap { height: auto; flex: 1 1 auto; min-height: 0; max-width: 100%; }
+  .heart {
+    width: 100%; height: 100%; padding: 3.4%; clip-path: url(#heartClip);
+    background: linear-gradient(140deg, #FFFFFF 15%, #F6BFD2 100%);
+    animation: beat 2.8s ease-in-out 1.6s infinite;
+  }
+  .heart-in { width: 100%; height: 100%; clip-path: url(#heartClip); background: var(--petal-2); }
+  .heart-in img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 15%; }
+  .heart-in .photo-ph { font-size: 12rem; }
+  .heart-wrap .perch { position: absolute; width: 22%; right: -5%; top: -9%; animation: hover 3.4s ease-in-out infinite; }
+  @keyframes beat { 0%, 100% { transform: scale(1); } 10% { transform: scale(1.035); } 20% { transform: scale(1); } 30% { transform: scale(1.02); } 40% { transform: scale(1); } }
   .runners { display: flex; justify-content: center; gap: 2.4rem; margin-top: 1.2rem; animation: fadeup .8s 1.2s both; }
   .runner { display: flex; align-items: center; gap: .9rem; background: rgba(255, 255, 255, .9); border-radius: 999px; padding: .4rem 1.4rem .4rem .4rem; font-size: 1.15rem; }
   .runner .thumb { width: 3.4rem; aspect-ratio: 1; border-radius: 50%; overflow: hidden; background: var(--petal-2); }
@@ -124,7 +163,7 @@
   .runner .thumb .photo-ph { font-size: 1.6rem; }
   .runner small { display: block; color: var(--muted); font-size: .9rem; }
   .no-votes { font-size: 2rem; color: var(--muted); }
-  @keyframes rise { from { transform: translateY(30%) scale(.8) rotate(-8deg); opacity: 0; } }
+  @keyframes rise { from { transform: translateY(20%) scale(.6); opacity: 0; } }
   @keyframes fadeup { from { transform: translateY(1.5rem); opacity: 0; } }
   @keyframes pulse { 50% { opacity: .55; } }
 
@@ -142,7 +181,8 @@
     <div class="brand"><img src="assets/logo.png" alt=""><span id="schoolName"></span></div>
     <p class="occasion" id="occasion"></p>
   </header>
-  <h1 class="script s-title"><span id="title">Ai rực rỡ nhất đêm nay?</span><img class="s-butterfly" src="assets/buom.png" alt=""></h1>
+  <h1 class="s-title"><span class="en" id="titleEn">WHO IS AURA OF GLAMOUR?</span><span class="vi" id="titleVi">AI RỰC RỠ NHẤT ĐÊM NAY?</span><img class="s-butterfly" src="assets/buom.png" alt=""></h1>
+  <nav class="groups" id="groups" aria-label="Xem ứng viên theo tổ/khối"></nav>
 
   <main class="s-main">
     <aside class="s-left">
@@ -166,10 +206,19 @@
     <section class="s-right">
       <div class="board" id="board" hidden></div>
       <p class="more" id="more" hidden></p>
+      <div class="wall-head" id="wallHead" hidden><h2 id="wallTitle"></h2><span id="wallCount"></span></div>
       <div class="wall" id="wall"></div>
     </section>
   </main>
 </div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <clipPath id="heartClip" clipPathUnits="objectBoundingBox">
+      <path d="M0.5,0.98 C0.47,0.955 0.02,0.66 0.02,0.31 C0.02,0.14 0.15,0.02 0.3,0.02 C0.39,0.02 0.46,0.07 0.5,0.15 C0.54,0.07 0.61,0.02 0.7,0.02 C0.85,0.02 0.98,0.14 0.98,0.31 C0.98,0.66 0.53,0.955 0.5,0.98 Z"/>
+    </clipPath>
+  </defs>
+</svg>
 
 <div class="reveal" id="reveal" hidden>
   <div class="countdown script" id="countdown"></div>
@@ -180,8 +229,8 @@
 
 <script type="module">
 import {
-  daCauHinh, db, SU_KIEN, onSnapshot, refCaiDat, refUngVien, refPhieu,
-  trangThai, conLai, so2, dongHo, demPhieu, linkBinhChon, chuCai, hienLoiCauHinh
+  daCauHinh, db, SU_KIEN, TO_KHOI, onSnapshot, refCaiDat, refUngVien, refPhieu,
+  trangThai, conLai, so2, dongHo, demPhieu, linkBinhChon, chuCai, khopToKhoi, hienLoiCauHinh
 } from "./firebase.js";
 
 const $ = (s) => document.querySelector(s);
@@ -190,6 +239,7 @@ let candidates = [], settings = null, votes = [], counts = new Map();
 let loaded = { c: false, s: false, v: false };
 let revealState = null; // null | "countdown" | "shown"
 let lastRevealed = null;
+let group = null; // tổ/khối đang xem, null = tất cả
 const rows = new Map();
 
 function photoEl(c) {
@@ -231,24 +281,54 @@ function renderLeft() {
   $("#total").textContent = votes.length;
 }
 
+/* ---------- Nút tổ/khối ---------- */
+function groupMembers(g) { return candidates.filter((c) => khopToKhoi(c.unit) === g); }
+
+function chooseGroup(g) { group = group === g ? null : g; renderGroups(); renderRight(); }
+
+function renderGroups() {
+  const nav = $("#groups");
+  nav.replaceChildren();
+  const mk = (label, value, n) => {
+    const b = el("button", "gbtn"); b.type = "button";
+    b.append(label);
+    if (n != null) b.append(el("span", "n", String(n)));
+    b.setAttribute("aria-pressed", String(group === value));
+    b.addEventListener("click", () => chooseGroup(value));
+    return b;
+  };
+  nav.append(mk("Tất cả", null, null));
+  TO_KHOI.forEach((g) => nav.append(mk(g, g, groupMembers(g).length)));
+}
+
 function renderRight() {
+  if (group) {
+    const list = groupMembers(group);
+    $("#board").hidden = true; $("#more").hidden = true;
+    $("#wallHead").hidden = false; $("#wall").hidden = false;
+    $("#wallTitle").textContent = group;
+    $("#wallCount").textContent = `${list.length} ứng viên`;
+    renderWall(list, `${group} chưa có ứng viên`);
+    return;
+  }
+  $("#wallHead").hidden = true;
   const st = trangThai(settings);
   const live = st !== "closed" && settings?.showLive !== false && candidates.length > 0;
   $("#board").hidden = !live;
   if (!live) $("#more").hidden = true;
   $("#wall").hidden = live;
-  live ? renderBoard() : renderWall();
+  live ? renderBoard() : renderWall(candidates, "Danh sách ứng viên sẽ xuất hiện ở đây");
 }
 
-function renderWall() {
+function renderWall(list, emptyText) {
   const wall = $("#wall");
   wall.replaceChildren();
-  if (!candidates.length) {
+  if (!list.length) {
     wall.style.gridTemplateColumns = "1fr"; wall.style.gridTemplateRows = "1fr";
-    wall.append(el("div", "wall-empty", "Danh sách ứng viên sẽ xuất hiện ở đây"));
+    wall.append(el("div", "wall-empty", emptyText));
     return;
   }
-  const n = candidates.length;
+  const n = list.length;
   const box = wall.getBoundingClientRect();
   // Chọn số cột để ảnh (tỉ lệ 3:4) to nhất có thể trong khung
   let best = 1, bestH = 0;
@@ -260,7 +340,9 @@ function renderWall() {
   }
   wall.style.gridTemplateColumns = `repeat(${best}, minmax(0, 1fr))`;
   wall.style.gridTemplateRows = `repeat(${Math.ceil(n / best)}, minmax(0, 1fr))`;
-  for (const c of candidates) {
+  // Ít người thì không để ảnh quá to
+  wall.style.maxWidth = n <= 2 ? `${n * 22}rem` : "";
+  for (const c of list) {
     const t = el("div", "tile");
     const ph = el("div", "ph"); ph.append(photoEl(c));
     const tag = el("div", "tag"); tag.append(el("b", "", so2(c.num)), el("span", "", c.name || ""));
@@ -326,30 +408,53 @@ function burst() {
   setTimeout(() => confetti({ particleCount: 160, spread: 120, startVelocity: 45, origin: { y: .45 }, colors, scalar: 1.3 }), 300);
 }
 
+function heartEl(c) {
+  const wrap = el("div", "heart-wrap");
+  const h = el("div", "heart");
+  const inner = el("div", "heart-in"); inner.append(photoEl(c));
+  h.append(inner);
+  const perch = el("img", "perch"); perch.src = "assets/buom.png"; perch.alt = "";
+  wrap.append(h, perch);
+  return wrap;
+}
+function titleBlock(target) {
+  const [k, t, sub] = SU_KIEN.congBo || ["THE WINNER", "AURA OF GLAMOUR", "VẺ ĐẸP KIÊU SA"];
+  target.append(el("p", "w-kicker", k), el("p", "w-title", t), el("p", "w-sub", sub), el("div", "w-rule"));
+}
+function metaEl(c) {
+  const m = el("p", "w-meta");
+  m.append(`Số ${so2(c.num)}${c.unit ? ", " + c.unit : ""}`, el("b", "", `${c.votes} phiếu`));
+  return m;
+}
+
 function renderWinner() {
   const w = $("#winner");
   w.replaceChildren();
   const list = ranked();
   const topVotes = list[0]?.votes || 0;
-  w.append(el("p", "w-cap", "Người rực rỡ nhất đêm nay"));
-  const row = el("div", "w-row");
+  const stage = el("div", "w-stage");
   if (!topVotes) {
-    row.append(el("p", "no-votes", "Chưa có phiếu bình chọn nào."));
-    w.append(row, el("div"));
+    stage.classList.add("many");
+    stage.append(el("p", "no-votes", "Chưa có phiếu bình chọn nào."));
+    w.append(stage, el("div"));
     return;
   }
   const winners = list.filter((c) => c.votes === topVotes);
-  if (winners.length > 1) row.classList.add("many");
-  for (const c of winners) {
-    const card = el("div", "wcard");
-    const frame = el("div", "frame");
-    const ph = el("div", "ph"); ph.append(photoEl(c));
-    const perch = el("img", "perch"); perch.src = "assets/buom.png"; perch.alt = "";
-    frame.append(ph, perch);
-    const meta = el("p", "w-meta");
-    meta.append(`Số ${so2(c.num)}${c.unit ? ", " + c.unit : ""}`, el("b", "", `${c.votes} phiếu`));
-    card.append(frame, el("p", "w-name", c.name || ""), meta);
-    row.append(card);
+  const text = el("div", "w-text");
+  titleBlock(text);
+  if (winners.length === 1) {
+    const c = winners[0];
+    text.append(el("p", "w-name", c.name || ""), metaEl(c));
+    stage.append(heartEl(c), text);
+  } else {
+    stage.classList.add("many");
+    const hearts = el("div", "w-hearts");
+    for (const c of winners) {
+      const one = el("div", "w-one");
+      one.append(heartEl(c), el("p", "w-name", c.name || ""), metaEl(c));
+      hearts.append(one);
+    }
+    stage.append(text, hearts);
   }
   const runners = el("div", "runners");
   const rest = list.filter((c) => c.votes > 0 && c.votes < topVotes);
@@ -362,7 +467,7 @@ function renderWinner() {
     const t = el("div"); t.append(el("small", "", `Xếp thứ ${rank}, ${c.votes} phiếu`), `${so2(c.num)}  ${c.name || ""}`);
     r.append(th, t); runners.append(r); shown++;
   }
-  w.append(row, runners);
+  w.append(stage, runners);
 }
 
 async function playReveal(withCountdown) {
@@ -394,13 +499,15 @@ function sync() {
   else if (!revealed && revealState) hideReveal();
   else if (revealState === "shown") renderWinner();
   lastRevealed = revealed;
-  renderLeft(); renderRight();
+  renderGroups(); renderLeft(); renderRight();
 }
 
 /* ---------- Khởi động ---------- */
 function start() {
   $("#schoolName").textContent = SU_KIEN.truong;
-  $("#title").textContent = SU_KIEN.tieuDe;
+  if (SU_KIEN.tieuDeLED1) $("#titleEn").textContent = SU_KIEN.tieuDeLED1;
+  if (SU_KIEN.tieuDeLED2) $("#titleVi").textContent = SU_KIEN.tieuDeLED2;
+  renderGroups();
   $("#occasion").textContent = SU_KIEN.dip;
   if (!daCauHinh) { hienLoiCauHinh(); return; }
   drawQR();
@@ -416,13 +523,21 @@ function start() {
   setInterval(() => { if (loaded.s) renderLeft(); }, 500);
   let lastSt = null;
   setInterval(() => { const st = trangThai(settings); if (st !== lastSt) { lastSt = st; sync(); } }, 1000);
-  addEventListener("resize", () => { if (!$("#wall").hidden) renderWall(); });
+  addEventListener("resize", () => { if (!$("#wall").hidden) renderRight(); });
 }
 
 /* Toàn màn hình + ẩn chuột khi không dùng */
 function toggleFS() { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.(); }
 $("#fsBtn").addEventListener("click", toggleFS);
-addEventListener("keydown", (e) => { if (e.key === "f" || e.key === "F") toggleFS(); });
+addEventListener("keydown", (e) => {
+  if (e.key === "f" || e.key === "F") toggleFS();
+  // Phím 0 = Tất cả, phím 1–9 = lần lượt các tổ/khối
+  else if (/^[0-9]$/.test(e.key) && loaded.c) {
+    const k = Number(e.key);
+    if (k === 0) { group = null; renderGroups(); renderRight(); }
+    else if (TO_KHOI[k - 1]) { group = TO_KHOI[k - 1]; renderGroups(); renderRight(); }
+  }
+});
 let idleT;
 function wake() { document.body.classList.remove("idle"); clearTimeout(idleT); idleT = setTimeout(() => document.body.classList.add("idle"), 2500); }
 addEventListener("mousemove", wake); wake();
